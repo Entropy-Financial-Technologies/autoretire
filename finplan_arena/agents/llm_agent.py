@@ -84,10 +84,14 @@ class AnthropicProvider:
 
 @dataclass
 class OpenAICompatProvider:
-    """OpenAI SDK against api.openai.com or any compatible ``base_url``."""
+    """OpenAI SDK against api.openai.com or any compatible ``base_url``
+    (OpenRouter, vLLM, LM Studio, ...).
+
+    ``temperature=None`` omits the parameter entirely — some models
+    (gpt-5/o-series) reject explicit temperatures."""
 
     model: str
-    temperature: float = 0.2
+    temperature: Optional[float] = 0.2
     max_tokens: int = 2000
     base_url: Optional[str] = None
     api_key_env: str = "OPENAI_API_KEY"
@@ -97,14 +101,24 @@ class OpenAICompatProvider:
             import openai
         except ImportError as e:  # pragma: no cover
             raise ProviderError("pip install openai (or use finplan-arena[llm])") from e
-        client = openai.OpenAI(api_key=os.environ.get(self.api_key_env),
-                               base_url=self.base_url)
+        api_key = os.environ.get(self.api_key_env)
+        if not api_key:
+            raise ProviderError(
+                f"environment variable {self.api_key_env} is not set")
+        client = openai.OpenAI(api_key=api_key, base_url=self.base_url)
+        kwargs = {}
+        if self.temperature is not None:
+            kwargs["temperature"] = self.temperature
         resp = client.chat.completions.create(
-            model=self.model, temperature=self.temperature,
+            model=self.model,
             max_tokens=self.max_tokens,
             messages=[{"role": "system", "content": system},
-                      {"role": "user", "content": user}])
+                      {"role": "user", "content": user}],
+            **kwargs)
         return resp.choices[0].message.content or ""
+
+
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 
 @dataclass
@@ -127,9 +141,9 @@ class CallableProvider:
 
 @dataclass
 class LLMConfig:
-    provider: str = "anthropic"            # "anthropic" | "openai" | "callable"
+    provider: str = "anthropic"  # "anthropic" | "openai" | "openrouter" | "callable"
     model: str = "claude-sonnet-4-5"
-    temperature: float = 0.2
+    temperature: Optional[float] = 0.2     # None → omit (gpt-5/o-series)
     max_tokens: int = 2000
     system_prompt: str = DEFAULT_SYSTEM_PROMPT
     base_url: Optional[str] = None
@@ -156,6 +170,12 @@ class LLMConfig:
             if self.api_key_env:
                 kwargs["api_key_env"] = self.api_key_env
             return OpenAICompatProvider(**kwargs)
+        if self.provider == "openrouter":
+            # OpenRouter is OpenAI-compatible; model ids look like
+            # "anthropic/claude-sonnet-4.5" or "openai/gpt-5-mini"
+            kwargs["base_url"] = self.base_url or OPENROUTER_BASE_URL
+            kwargs["api_key_env"] = self.api_key_env or "OPENROUTER_API_KEY"
+            return OpenAICompatProvider(**kwargs)
         raise ValueError(f"Unknown provider '{self.provider}'")
 
 
@@ -178,9 +198,10 @@ class PromptCache:
         return os.path.join(self.dir, key + ".json")
 
     @staticmethod
-    def key(model: str, temperature: float, system: str, user: str) -> str:
+    def key(model: str, temperature: Optional[float], system: str, user: str) -> str:
         h = hashlib.sha256()
-        h.update(f"{model}|{temperature:.4f}|".encode())
+        temp = "default" if temperature is None else f"{temperature:.4f}"
+        h.update(f"{model}|{temp}|".encode())
         h.update(system.encode())
         h.update(b"|")
         h.update(user.encode())
@@ -256,6 +277,17 @@ class LLMAgent(BaseAgent):
 
     def reset(self) -> None:
         pass  # failure counters intentionally persist across a run
+
+    def preflight(self) -> None:
+        """Cheap sanity check before a run burns seeds: a missing API key
+        would otherwise degrade every year to the hold-prior fallback and
+        produce a 'successful' run of garbage."""
+        env = getattr(self.provider, "api_key_env", None)
+        if env and not os.environ.get(env):
+            raise ProviderError(
+                f"environment variable {env} is not set — export it (or use "
+                f"a config with the right api_key_env) before running "
+                f"agent '{self.name}'")
 
     # -- prompt assembly ----------------------------------------------------
 

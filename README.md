@@ -181,6 +181,20 @@ finplan run --scenario meridian --agent llm:configs/sonnet.json --seeds 300
 `"provider": "openai"` plus `"base_url"` for any OpenAI-compatible server.
 `pip install -e ".[llm]"` pulls the SDKs.)
 
+**OpenRouter** is first-class: set `OPENROUTER_API_KEY` and either use the
+shorthand
+
+```
+finplan run --scenario meridian --agent openrouter:openai/gpt-5-mini --seeds 12
+```
+
+or a config with `"provider": "openrouter"` (see
+`configs/openrouter.example.json`). Model ids are OpenRouter's
+(`vendor/model`). Set `"temperature": null` for models that reject explicit
+temperatures (gpt-5/o-series). Runs fail fast with a clear error if the key
+env var is missing, and the stub-server integration tests
+(`tests/test_openai_compat_live.py`) exercise the exact transport offline.
+
 Mechanics you get for free:
 
 * **Prompting.** The agent receives a plain-language household summary, the

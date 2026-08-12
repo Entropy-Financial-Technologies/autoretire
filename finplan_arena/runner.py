@@ -86,6 +86,8 @@ def make_agent_factory(spec: str,
     * ``expert`` / ``tdf`` / ``naive``  — rule-based baselines
     * ``mock-llm``                       — deterministic canned LLM
     * ``llm:<path.json>``                — LLMAgent from a config file
+    * ``openrouter:<model-id>``          — LLMAgent via OpenRouter (uses
+      OPENROUTER_API_KEY), e.g. ``openrouter:openai/gpt-5-mini``
     * ``claude-sonnet`` etc. (any other string) — LLMAgent on Anthropic with
       that model name (uses ANTHROPIC_API_KEY)
     """
@@ -98,6 +100,10 @@ def make_agent_factory(spec: str,
         path = spec.split(":", 1)[1] or (llm_config_path or "")
         cfg = LLMConfig.from_file(path)
         return lambda: LLMAgent(cfg)
+    if spec.startswith("openrouter:"):
+        model = spec.split(":", 1)[1]
+        cfg = LLMConfig(provider="openrouter", model=model)
+        return lambda: LLMAgent(cfg, name=spec)
     if llm_config_path:
         cfg = LLMConfig.from_file(llm_config_path)
         return lambda: LLMAgent(cfg)
@@ -107,6 +113,7 @@ def make_agent_factory(spec: str,
 
 
 AGENT_SPECS = sorted(BASELINES) + ["mock-llm", "llm:<config.json>",
+                                   "openrouter:<model-id>",
                                    "<anthropic-model-name>"]
 
 
@@ -210,6 +217,8 @@ def run_many(cfg: RunConfig, agent_factory: Optional[AgentFactory] = None,
     os.makedirs(os.path.join(out_dir, "trials"), exist_ok=True)
 
     probe = agent_factory()
+    if isinstance(probe, LLMAgent):
+        probe.preflight()  # fail fast on missing API keys
     run_meta = {
         "schema": "finplan-arena/run/1",
         "scenario": scenario.name,
