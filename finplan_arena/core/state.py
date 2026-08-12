@@ -298,6 +298,7 @@ class HouseholdState:
     prior_decision: Optional[dict[str, Any]] = None
     prior_rationale: str = ""
     returns_history: list[dict[str, float]] = field(default_factory=list)
+    history: list[dict[str, Any]] = field(default_factory=list)  # per-year digests
 
     version: str = STATE_SCHEMA_VERSION
 
@@ -376,6 +377,7 @@ class HouseholdState:
             "prior_decision": self.prior_decision,
             "prior_rationale": self.prior_rationale,
             "returns_history": self.returns_history,
+            "history": self.history,
         }
 
     @classmethod
@@ -400,6 +402,7 @@ class HouseholdState:
             prior_decision=d.get("prior_decision"),
             prior_rationale=d.get("prior_rationale", ""),
             returns_history=d.get("returns_history", []),
+            history=d.get("history", []),
         )
 
     def to_json(self) -> str:

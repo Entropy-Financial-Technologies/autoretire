@@ -65,6 +65,7 @@ class SimConfig:
     enable_ctc: bool = True
     enable_niit: bool = True
     settle_iterations: int = 15         # forced-liquidation fixed-point cap
+    include_history: bool = True        # feed full per-year history to agents
 
 
 # ---------------------------------------------------------------------------
@@ -762,6 +763,59 @@ def simulate_year(state: HouseholdState, decision: Decision,
 # ---------------------------------------------------------------------------
 
 
+def history_record(log: YearLog) -> dict:
+    """Compact one-year digest for the agent-facing history: what was decided
+    (non-zero fields only), the verbatim rationale, and what happened.
+
+    Built from the merged log (after validator violations are attached), so
+    the record reflects the decision as applied plus every violation."""
+    dd = log.decision or {}
+    contribs = {k: v for k, v in (dd.get("contributions") or {}).items() if v}
+    withdrawals = {k: v for k, v in (dd.get("withdrawals") or {}).items() if v}
+    dec: dict = {"spending": dd.get("annual_spending_discretionary", 0.0)}
+    if contribs:
+        dec["contributions"] = contribs
+    if withdrawals:
+        dec["withdrawals"] = withdrawals
+    if dd.get("roth_conversion_amount"):
+        dec["roth_conversion"] = dd["roth_conversion_amount"]
+    for flag in ("retire_now", "claim_social_security"):
+        who = [k for k, v in (dd.get(flag) or {}).items() if v]
+        if who:
+            dec[flag] = who
+    if dd.get("tax_loss_harvest"):
+        dec["tax_loss_harvest"] = True
+    if dd.get("allocations"):
+        dec["allocations_changed"] = True
+
+    outcome: dict = {
+        "consumption_real": round(log.consumption_real, 2),
+        "net_worth_real": round(log.net_worth_real, 2),
+        "total_tax": round(log.tax.get("total_tax", 0.0), 2),
+    }
+    if log.violations:
+        outcome["violations"] = [v.get("code", "?") for v in log.violations]
+    if log.rmd_forced:
+        outcome["rmd_forced"] = round(log.rmd_forced, 2)
+    if log.roth_converted:
+        outcome["roth_converted"] = round(log.roth_converted, 2)
+    if log.ss_benefits:
+        outcome["ss_income"] = round(log.ss_benefits, 2)
+    if log.forced_liquidation:
+        outcome["forced_liquidation"] = round(log.forced_liquidation, 2)
+    if log.shortfalls:
+        outcome["shortfalls"] = log.shortfalls
+
+    return {
+        "year": log.year_index,
+        "calendar_year": log.calendar_year,
+        "inflation_index": round(log.inflation_index_eoy, 4),
+        "rationale": log.rationale,
+        "decision": dec,
+        "outcome": outcome,
+    }
+
+
 def _rules_text(state: HouseholdState, limits: ContributionLimits) -> str:
     ages = {a.person_id: a.age for a in state.adults}
     lines = [
@@ -876,10 +930,13 @@ def build_observation(state: HouseholdState, cfg: SimConfig,
         "roth_magi_phaseout_start": limits.roth_magi_phaseout_lo,
         "roth_magi_phaseout_end": limits.roth_magi_phaseout_hi,
     }
+    state_dict = state.to_dict()
+    if not cfg.include_history:
+        state_dict.pop("history", None)
     return Observation(
         year_index=state.year_index,
         calendar_year=state.calendar_year,
-        state=state.to_dict(),
+        state=state_dict,
         limits=limits_dict,
         rules_text=_rules_text(state, limits),
         upcoming=_upcoming_obligations(state, cfg),

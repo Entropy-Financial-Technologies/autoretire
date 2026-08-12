@@ -13,6 +13,7 @@ import json
 import os
 import sys
 
+from .core.simulator import SimConfig
 from .runner import (RunConfig, build_summary, load_run, load_trial,
                      make_agent_factory, run_many, AGENT_SPECS)
 from .scenarios.library import SCENARIOS, get_scenario
@@ -33,6 +34,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         log_detail=args.log_detail,
         agent_horizon=args.agent_horizon,
         llm_config_path=args.llm_config,
+        sim=SimConfig(include_history=args.history),
         metrics=MetricConfig(gamma=args.gamma),
     )
     out = run_many(cfg)
@@ -225,6 +227,11 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--llm-config", default=None,
                    help="LLM config JSON (see README) for LLM agent specs")
     r.add_argument("--gamma", type=float, default=3.0, help="CRRA γ")
+    r.add_argument("--history", action=argparse.BooleanOptionalAction,
+                   default=True,
+                   help="feed agents their full per-year history (decision "
+                        "digest + rationale + outcome); --no-history restores "
+                        "the prior-year-only prompt")
     r.set_defaults(fn=_cmd_run)
 
     c = sub.add_parser("compare", help="paired comparison of 2+ runs")

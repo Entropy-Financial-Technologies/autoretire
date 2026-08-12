@@ -142,7 +142,10 @@ class Observation:
             "year_index": self.year_index,
             "calendar_year": self.calendar_year,
             "scenario": self.scenario_name,
-            "household_state": self.state,
+            # history is rendered as its own JSON-per-line prompt section;
+            # repeating it inside the state dump would double its token cost
+            "household_state": {k: v for k, v in self.state.items()
+                                if k != "history"},
             "contribution_limits": self.limits,
             "estimated_magi": self.estimated_magi,
             "rmd_due": self.rmd_due,
@@ -220,6 +223,14 @@ class Observation:
         for k, v in self.limits.items():
             lines.append(f"  {k}: ${v:,.0f}")
         lines.append("")
+        history = s.get("history") or []
+        if history:
+            lines.append("YOUR FULL HISTORY (every prior year: decision digest, "
+                         "your rationale verbatim, and the realized outcome — "
+                         "one JSON object per year)")
+            for rec in history:
+                lines.append("  " + json.dumps(rec, sort_keys=True))
+            lines.append("")
         if self.prior_decision is not None:
             lines.append("YOUR PRIOR-YEAR DECISION (for continuity; avoid thrashing)")
             lines.append("  " + json.dumps(self.prior_decision, sort_keys=True))

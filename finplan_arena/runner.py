@@ -32,6 +32,7 @@ from .agents.llm_agent import LLMAgent, LLMConfig, MockLLMAgent
 from .agents.validation import validate_decision
 from .core.accounts import ContributionLimits
 from .core.simulator import (SimConfig, build_observation, estimate_magi,
+                             history_record,
                              simulate_year)
 from .core.life_events import years_until_both_reach
 from .markets.returns import make_generator
@@ -164,6 +165,7 @@ def run_trial(scenario: Scenario, agent: BaseAgent, seed: int,
         state, log = simulate_year(state, vetted, path[t], cfg.sim,
                                    prevalidated=True)
         log.violations = [v.to_dict() for v in violations] + log.violations
+        state.history.append(history_record(log))
         logs.append(log.to_dict())
 
     metrics = compute_trial_metrics(logs, state.to_dict(),
