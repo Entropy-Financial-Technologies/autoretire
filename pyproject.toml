@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "finplan-arena"
+version = "0.1.0"
+description = "FinPlan Arena: an evaluation harness for LLM agents on multi-decade household financial planning"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=1.24",
+    "pydantic>=2.5",
+]
+
+[project.optional-dependencies]
+llm = ["anthropic>=0.40", "openai>=1.50"]
+charts = ["matplotlib>=3.7"]
+dev = ["pytest>=7.4", "matplotlib>=3.7"]
+
+[project.scripts]
+finplan = "finplan_arena.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["finplan_arena*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
