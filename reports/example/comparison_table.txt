@@ -1,0 +1,23 @@
+metric                                      mock-llm            expert               tdf             naive
+----------------------------------------------------------------------------------------------------------
+seeds                                            300               300               300               300
+median CE wealth (real $)                  3,743,328         3,817,781         3,355,877         3,538,301
+p10 CE wealth (real $)                     3,225,063         3,237,883         2,925,705         3,003,548
+median CE annual (real $/yr)                 134,617           137,294           120,683           127,243
+median terminal wealth (real $)            9,494,605         6,222,126         7,357,065         5,570,820
+P(ruin before 95)                               4.0%              5.0%              2.3%              5.0%
+P(all goals met)                               96.0%             95.0%             97.7%             95.0%
+P(college goal met)                           100.0%            100.0%            100.0%            100.0%
+P(retirement goal met)                         99.7%            100.0%            100.0%             99.3%
+mean lifetime taxes (real $)               3,998,424         2,390,650         3,930,389         2,924,800
+mean lifetime penalties (real $)                 869                75               133                 0
+mean violations / trial                         1.00              0.00              0.00              0.00
+mean decision churn                            0.003             0.008             0.007             0.000
+
+Paired differences vs 'expert' on ce_wealth (positive = better than expert; bootstrap 95% CI):
+  mock-llm     mean diff        -65,633   CI [-74,795, -56,849]   win rate 18.7%   (SIGNIFICANT, n=300)
+  tdf          mean diff       -406,694   CI [-420,063, -393,198]   win rate 0.0%   (SIGNIFICANT, n=300)
+  naive        mean diff       -261,354   CI [-271,180, -252,012]   win rate 0.0%   (SIGNIFICANT, n=300)
+
+wrote reports/example/comparison.json
+wrote reports/example/comparison_charts.png

@@ -44,9 +44,10 @@ AgentFactory = Callable[[], BaseAgent]
 #: YearLog fields kept when --log-detail=summary (full state traces off)
 _SUMMARY_LOG_FIELDS = (
     "year_index", "calendar_year", "inflation_index_boy", "inflation_index_eoy",
-    "all_retired", "violations", "shortfalls", "tax", "expenses",
+    "ages", "all_retired", "violations", "shortfalls", "tax", "expenses",
     "consumption_real", "net_worth_nominal", "rationale", "rmd_forced",
     "roth_converted", "forced_liquidation", "unpaid_tax", "allocations_target",
+    "ss_benefits", "life_events",
 )
 
 

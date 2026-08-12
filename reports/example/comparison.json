@@ -1,0 +1,101 @@
+{
+  "reference": "expert",
+  "metric": "ce_wealth",
+  "summaries": {
+    "mock-llm": {
+      "n_seeds": 300,
+      "median_ce_wealth": 3743328.325987921,
+      "p10_ce_wealth": 3225062.747625864,
+      "median_ce_annual": 134616.5991686271,
+      "median_terminal_wealth_real": 9494605.126356743,
+      "mean_lifetime_taxes_real": 3998423.616893007,
+      "mean_lifetime_penalties_real": 868.7759576413101,
+      "mean_violations": 1.0,
+      "mean_decision_churn": 0.003448275862068966,
+      "p_ruin": 0.04,
+      "p_all_goals_met": 0.96,
+      "p_college_goal_met": 1.0,
+      "p_retirement_goal_met": 0.9966666666666667
+    },
+    "expert": {
+      "n_seeds": 300,
+      "median_ce_wealth": 3817781.0848551467,
+      "p10_ce_wealth": 3237882.9175171056,
+      "median_ce_annual": 137294.04990888044,
+      "median_terminal_wealth_real": 6222126.055616879,
+      "mean_lifetime_taxes_real": 2390649.5801241947,
+      "mean_lifetime_penalties_real": 74.72123439337554,
+      "mean_violations": 0.0,
+      "mean_decision_churn": 0.008448548641447525,
+      "p_ruin": 0.05,
+      "p_all_goals_met": 0.95,
+      "p_college_goal_met": 1.0,
+      "p_retirement_goal_met": 1.0
+    },
+    "tdf": {
+      "n_seeds": 300,
+      "median_ce_wealth": 3355876.979290236,
+      "p10_ce_wealth": 2925705.0268863495,
+      "median_ce_annual": 120683.17466144552,
+      "median_terminal_wealth_real": 7357064.91850245,
+      "mean_lifetime_taxes_real": 3930388.983842353,
+      "mean_lifetime_penalties_real": 132.7381837526034,
+      "mean_violations": 0.0,
+      "mean_decision_churn": 0.006570881226053641,
+      "p_ruin": 0.023333333333333334,
+      "p_all_goals_met": 0.9766666666666667,
+      "p_college_goal_met": 1.0,
+      "p_retirement_goal_met": 1.0
+    },
+    "naive": {
+      "n_seeds": 300,
+      "median_ce_wealth": 3538300.8710194705,
+      "p10_ce_wealth": 3003547.7042255546,
+      "median_ce_annual": 127243.45518538656,
+      "median_terminal_wealth_real": 5570820.453504668,
+      "mean_lifetime_taxes_real": 2924800.187711632,
+      "mean_lifetime_penalties_real": 0.0,
+      "mean_violations": 0.0,
+      "mean_decision_churn": 0.0,
+      "p_ruin": 0.05,
+      "p_all_goals_met": 0.95,
+      "p_college_goal_met": 1.0,
+      "p_retirement_goal_met": 0.9933333333333333
+    }
+  },
+  "paired_vs_reference": {
+    "mock-llm": {
+      "agent_a": "mock-llm",
+      "agent_b": "expert",
+      "metric": "ce_wealth",
+      "n_seeds": 300,
+      "mean_diff": -65633.2880241199,
+      "ci_lo": -74794.61441461171,
+      "ci_hi": -56849.06680767113,
+      "win_rate_a": 0.18666666666666668,
+      "significant": true
+    },
+    "tdf": {
+      "agent_a": "tdf",
+      "agent_b": "expert",
+      "metric": "ce_wealth",
+      "n_seeds": 300,
+      "mean_diff": -406693.74058890075,
+      "ci_lo": -420062.8436867465,
+      "ci_hi": -393198.44460560445,
+      "win_rate_a": 0.0,
+      "significant": true
+    },
+    "naive": {
+      "agent_a": "naive",
+      "agent_b": "expert",
+      "metric": "ce_wealth",
+      "n_seeds": 300,
+      "mean_diff": -261354.3912500841,
+      "ci_lo": -271179.8260179543,
+      "ci_hi": -252012.34029570862,
+      "win_rate_a": 0.0,
+      "significant": true
+    }
+  }
+}

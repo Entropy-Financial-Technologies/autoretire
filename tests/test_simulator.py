@@ -225,14 +225,13 @@ def test_ss_forced_claim_at_70():
         a.age = 70
         a.retired = True
     st.children = []
-    pia = st.adults[0].ss_pia_annual
+    total_pia = sum(a.ss_pia_annual for a in st.adults)
     _new, log = simulate_year(st, Decision(), FLAT, CFG)
     claims = log.life_events["ss_claims"]
     assert {c["person_id"] for c in claims} == {"a1", "a2"}
     assert all(c["forced"] for c in claims)
-    assert log.ss_benefits == pytest.approx(
-        1.24 * (pia + st.adults[1].ss_pia_annual /
-                (1 + FLAT.inflation)), rel=1e-6) or log.ss_benefits > 0
+    # both claim at 70 → 124% of PIA, paid for the full claim year
+    assert log.ss_benefits == pytest.approx(1.24 * total_pia, rel=1e-9)
 
 
 def test_observation_is_backward_looking_only():

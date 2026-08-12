@@ -1,0 +1,10 @@
+{
+  "provider": "anthropic",
+  "model": "claude-sonnet-4-5",
+  "temperature": 0.2,
+  "max_tokens": 2000,
+  "cache_dir": ".llm_cache",
+  "api_key_env": "ANTHROPIC_API_KEY",
+  "max_schema_retries": 2,
+  "max_transport_retries": 5
+}
