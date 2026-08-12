@@ -1,7 +1,10 @@
 """Rule-based baseline agents.
 
-Three personas an LLM should be measured against:
+Four personas an LLM should be measured against:
 
+* ``drift``   — absolute passivity: no contributions, no allocation changes,
+                spending pinned at the floor; the engine's forced cascade,
+                RMD enforcement, and age-70 SS auto-claim do everything.
 * ``tdf``     — target-date-fund saver: (110 − age) glide path, flat 15%
                 gross savings rate, straight-line 529 funding, claims SS at
                 FRA (67), 4% rule in retirement.
@@ -684,8 +687,36 @@ class FourPercentDrawdownAgent(BaseAgent):
         return d
 
 
+class DriftAgent(BaseAgent):
+    """Absolute passivity: the household never lifts a finger.
+
+    No contributions (even the employer match is forgone), no voluntary
+    withdrawals, no conversions, no harvesting, no claims, and allocations
+    are never touched (every account keeps its scenario-initial targets).
+    Salary piles up in cash; in retirement the forced-liquidation cascade
+    pays the bills, RMDs are engine-enforced, and Social Security arrives
+    only via the engine's forced claim at 70. The single non-default field
+    is discretionary spending, pinned at the scenario floor so the agent
+    stays zero-violation (a literal 0 would just be clipped to the floor
+    and flagged every year).
+
+    This is the true bottom anchor of the ladder: an LLM's lift over
+    ``drift`` measures the value of doing anything at all."""
+
+    name = "drift"
+
+    def decide(self, obs: Observation) -> Decision:
+        st = _st(obs)
+        return Decision(
+            rationale="Drift baseline: touch nothing; spend the floor; the "
+                      "engine's forced cascade, RMDs, and age-70 SS claim "
+                      "do the rest.",
+            annual_spending_discretionary=round(st.discretionary_floor, 2))
+
+
 BASELINES: dict[str, type[BaseAgent]] = {
     "tdf": TargetDateAgent,
     "naive": NaiveAgent,
     "expert": RuleBasedExpertAgent,
+    "drift": DriftAgent,
 }
