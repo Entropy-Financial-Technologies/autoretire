@@ -63,6 +63,32 @@ automatics only). gpt-5-mini's entire active management is worth ~$178k of
 CE wealth over doing nothing — about 17% of the expert-vs-drift gap — while
 `naive`, which simply spends like a normal household, beats both.
 
+## Hybrid: expert proposes, LLM disposes
+
+`hybrid:<config.json>` shows the LLM the rules-based expert's full proposed
+decision each year to adopt, adjust, or override (schema-failure fallback is
+the proposal). Paired seeds 0–3, mean CE wealth:
+
+```
+hybrid sonnet-4.5         3,821,845   beats expert on 3/4 seeds (+112,535 mean)
+expert                    3,709,310
+hybrid gpt-5-mini         3,370,347   loses to expert on 3/4 seeds (−338,963 mean)
+sonnet-4.5 solo           3,516,766
+gpt-5-mini solo           2,895,053
+```
+
+Hybrid sonnet is the first agent to beat the expert: it adopts the expert's
+spending/withdrawal discipline and overrides its one structural weakness —
+the gap-driven savings budget that stops funding Roths once the retirement
+goal is on track ("Maxed both Roth IRAs via backdoor ($19.5k vs $0)").
+
+Hybrid mini recovers ~60% of its solo gap (+$475k) because the proposal
+drags its spending up, but its conservatism then bleeds it: it re-anchors
+on the proposal-adjacent number ($53,183 nominal frozen from year 5) and
+actively rejects the expert's good ideas — year 29: "Rejected the
+proposal's large taxable funding, higher spending, and big Roth
+conversions." A weak reviewer subtracts value even from a correct plan.
+
 ## Runs (gitignored; regenerate with the configs in `configs/`)
 
 - `runs/meridian4_{gpt5mini_hist,gpt5,gpt5_hist,sonnet45,sonnet45_hist}`
