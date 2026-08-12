@@ -1,0 +1,1 @@
+{"provider": "openrouter", "model": "anthropic/claude-sonnet-4.5", "temperature": null, "max_tokens": 8000, "cache_dir": ".llm_cache", "api_key_env": "OPENROUTER_API_KEY", "max_schema_retries": 2, "max_transport_retries": 5}
