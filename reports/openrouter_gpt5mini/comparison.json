@@ -1,0 +1,127 @@
+{
+  "reference": "expert",
+  "metric": "ce_wealth",
+  "summaries": {
+    "llm:openai/gpt-5-mini": {
+      "n_seeds": 12,
+      "median_ce_wealth": 2918573.7551118275,
+      "p10_ce_wealth": 2839175.715694518,
+      "median_ce_annual": 104956.98990877977,
+      "median_terminal_wealth_real": 25391641.84223304,
+      "mean_lifetime_taxes_real": 4774448.237478876,
+      "mean_lifetime_penalties_real": 0.0,
+      "mean_violations": 4.916666666666667,
+      "mean_decision_churn": 0.00016363346104725416,
+      "p_ruin": 0.0,
+      "p_all_goals_met": 1.0,
+      "p_college_goal_met": 1.0,
+      "p_retirement_goal_met": 1.0
+    },
+    "expert": {
+      "n_seeds": 12,
+      "median_ce_wealth": 3916983.432108041,
+      "p10_ce_wealth": 3205454.0837317714,
+      "median_ce_annual": 140861.5389063104,
+      "median_terminal_wealth_real": 6274092.445922039,
+      "mean_lifetime_taxes_real": 2238372.7546857623,
+      "mean_lifetime_penalties_real": 0.0,
+      "mean_violations": 0.0,
+      "mean_decision_churn": 0.008341103267945708,
+      "p_ruin": 0.0,
+      "p_all_goals_met": 1.0,
+      "p_college_goal_met": 1.0,
+      "p_retirement_goal_met": 1.0
+    },
+    "tdf": {
+      "n_seeds": 12,
+      "median_ce_wealth": 3480595.446868509,
+      "p10_ce_wealth": 2930098.057454748,
+      "median_ce_annual": 125168.26773820064,
+      "median_terminal_wealth_real": 7890045.469603401,
+      "mean_lifetime_taxes_real": 3517207.845932253,
+      "mean_lifetime_penalties_real": 387.22364482678455,
+      "mean_violations": 0.0,
+      "mean_decision_churn": 0.006570881226053639,
+      "p_ruin": 0.0,
+      "p_all_goals_met": 1.0,
+      "p_college_goal_met": 1.0,
+      "p_retirement_goal_met": 1.0
+    },
+    "naive": {
+      "n_seeds": 12,
+      "median_ce_wealth": 3699403.524288747,
+      "p10_ce_wealth": 3010252.7521750983,
+      "median_ce_annual": 133036.98688005266,
+      "median_terminal_wealth_real": 5518104.619025828,
+      "mean_lifetime_taxes_real": 2575616.599600568,
+      "mean_lifetime_penalties_real": 0.0,
+      "mean_violations": 0.0,
+      "mean_decision_churn": 0.0,
+      "p_ruin": 0.0,
+      "p_all_goals_met": 1.0,
+      "p_college_goal_met": 1.0,
+      "p_retirement_goal_met": 1.0
+    },
+    "mock-llm": {
+      "n_seeds": 12,
+      "median_ce_wealth": 3882291.5962767703,
+      "p10_ce_wealth": 3192879.7029363257,
+      "median_ce_annual": 139613.9601336711,
+      "median_terminal_wealth_real": 11586324.039523602,
+      "mean_lifetime_taxes_real": 3520217.143305726,
+      "mean_lifetime_penalties_real": 1523.3999376408144,
+      "mean_violations": 0.8333333333333334,
+      "mean_decision_churn": 0.003448275862068966,
+      "p_ruin": 0.0,
+      "p_all_goals_met": 1.0,
+      "p_college_goal_met": 1.0,
+      "p_retirement_goal_met": 1.0
+    }
+  },
+  "paired_vs_reference": {
+    "llm:openai/gpt-5-mini": {
+      "agent_a": "llm:openai/gpt-5-mini",
+      "agent_b": "expert",
+      "metric": "ce_wealth",
+      "n_seeds": 12,
+      "mean_diff": -852962.1245842233,
+      "ci_lo": -1031441.4786134724,
+      "ci_hi": -642079.9306337788,
+      "win_rate_a": 0.0,
+      "significant": true
+    },
+    "tdf": {
+      "agent_a": "tdf",
+      "agent_b": "expert",
+      "metric": "ce_wealth",
+      "n_seeds": 12,
+      "mean_diff": -399191.1359734572,
+      "ci_lo": -469752.4264366426,
+      "ci_hi": -318152.63377431635,
+      "win_rate_a": 0.0,
+      "significant": true
+    },
+    "naive": {
+      "agent_a": "naive",
+      "agent_b": "expert",
+      "metric": "ce_wealth",
+      "n_seeds": 12,
+      "mean_diff": -229705.192264253,
+      "ci_lo": -269796.59606336866,
+      "ci_hi": -191268.8133925037,
+      "win_rate_a": 0.0,
+      "significant": true
+    },
+    "mock-llm": {
+      "agent_a": "mock-llm",
+      "agent_b": "expert",
+      "metric": "ce_wealth",
+      "n_seeds": 12,
+      "mean_diff": -49266.70622903147,
+      "ci_lo": -86220.69458921925,
+      "ci_hi": -13242.937958616725,
+      "win_rate_a": 0.16666666666666666,
+      "significant": true
+    }
+  }
+}
