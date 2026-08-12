@@ -19,7 +19,7 @@ import json
 import os
 import re
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Callable, Optional
 
 from pydantic import ValidationError
@@ -352,6 +352,71 @@ class LLMAgent(BaseAgent):
         self.llm_failures += 1
         state = HouseholdState.from_dict(obs.state)
         return Decision.hold_prior(state)
+
+
+# ---------------------------------------------------------------------------
+# Hybrid: rules-based proposal + LLM review
+# ---------------------------------------------------------------------------
+
+
+HYBRID_SYSTEM_SUFFIX = """
+
+Each year you are also given a PROPOSED DECISION from a deterministic
+rules-based planner (glide path, contribution waterfall, bracket-filling
+Roth conversions, delayed Social Security, sustainable spending). You may
+adopt it unchanged, adjust individual fields, or override it entirely —
+whatever you judge best for the household. State briefly in the rationale
+what you changed relative to the proposal and why (or that you adopted it)."""
+
+
+class HybridAgent(LLMAgent):
+    """Expert proposes, LLM disposes.
+
+    The rules-based expert computes its full decision for the year; the LLM
+    sees it alongside the normal observation and returns the final decision.
+    On schema failure the fallback is the expert's proposal itself (not
+    hold-prior), so degraded years remain sensible."""
+
+    def __init__(self, config: LLMConfig, provider=None,
+                 name: Optional[str] = None):
+        config = replace(config,
+                         system_prompt=config.system_prompt + HYBRID_SYSTEM_SUFFIX)
+        super().__init__(config, provider=provider,
+                         name=name or f"hybrid:{config.model}")
+        from .baselines import RuleBasedExpertAgent
+        self._expert = RuleBasedExpertAgent()
+        self._proposal_json: Optional[str] = None
+
+    def reset(self) -> None:
+        self._expert.reset()
+
+    def build_prompt(self, obs, error_feedback: str = "") -> str:
+        base = super().build_prompt(obs, error_feedback)
+        return (base
+                + "\n\nPROPOSED DECISION FROM THE RULES-BASED PLANNER "
+                  "(adopt, adjust, or override — your call):\n"
+                + (self._proposal_json or "{}"))
+
+    def decide(self, obs) -> Decision:
+        proposal = self._expert.decide(obs)
+        self._proposal_json = json.dumps(proposal.to_json_dict(),
+                                         sort_keys=True)
+        error_feedback = ""
+        for _attempt in range(1 + self.config.max_schema_retries):
+            prompt = self.build_prompt(obs, error_feedback)
+            try:
+                raw = self._complete(self.config.system_prompt, prompt)
+            except ProviderError:
+                break
+            try:
+                payload = extract_json_object(raw)
+                return Decision.model_validate_json(payload)
+            except (ValueError, ValidationError) as e:
+                error_feedback = str(e)[:2000]
+        self.llm_failures += 1
+        proposal.rationale = ("fallback: adopted the rules-based proposal "
+                              "(schema failure)")
+        return proposal
 
 
 # ---------------------------------------------------------------------------

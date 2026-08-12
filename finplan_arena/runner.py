@@ -28,7 +28,8 @@ from typing import Any, Callable, Optional
 
 from .agents.base import BaseAgent, Decision
 from .agents.baselines import BASELINES, FourPercentDrawdownAgent
-from .agents.llm_agent import LLMAgent, LLMConfig, MockLLMAgent
+from .agents.llm_agent import (HybridAgent, LLMAgent, LLMConfig,
+                               MockLLMAgent)
 from .agents.validation import validate_decision
 from .core.accounts import ContributionLimits
 from .core.simulator import (SimConfig, build_observation, estimate_magi,
@@ -87,6 +88,7 @@ def make_agent_factory(spec: str,
     * ``expert`` / ``tdf`` / ``naive``  — rule-based baselines
     * ``mock-llm``                       — deterministic canned LLM
     * ``llm:<path.json>``                — LLMAgent from a config file
+    * ``hybrid:<path.json>``             — expert proposes, LLM reviews
     * ``openrouter:<model-id>``          — LLMAgent via OpenRouter (uses
       OPENROUTER_API_KEY), e.g. ``openrouter:openai/gpt-5-mini``
     * ``claude-sonnet`` etc. (any other string) — LLMAgent on Anthropic with
@@ -101,6 +103,10 @@ def make_agent_factory(spec: str,
         path = spec.split(":", 1)[1] or (llm_config_path or "")
         cfg = LLMConfig.from_file(path)
         return lambda: LLMAgent(cfg)
+    if spec.startswith("hybrid:"):
+        path = spec.split(":", 1)[1] or (llm_config_path or "")
+        cfg = LLMConfig.from_file(path)
+        return lambda: HybridAgent(cfg)
     if spec.startswith("openrouter:"):
         model = spec.split(":", 1)[1]
         cfg = LLMConfig(provider="openrouter", model=model)
@@ -114,6 +120,7 @@ def make_agent_factory(spec: str,
 
 
 AGENT_SPECS = sorted(BASELINES) + ["mock-llm", "llm:<config.json>",
+                                   "hybrid:<config.json>",
                                    "openrouter:<model-id>",
                                    "<anthropic-model-name>"]
 

@@ -114,3 +114,51 @@ def test_mock_llm_exercises_full_pipeline():
     assert isinstance(d, Decision)
     assert d.contributions.k401_a1 > 0           # saves something
     assert agent.llm_failures == 0
+
+
+# ---------------------------------------------------------------------------
+# Hybrid (expert proposes, LLM reviews)
+# ---------------------------------------------------------------------------
+
+
+def _hybrid_obs():
+    from finplan_arena.core.simulator import SimConfig, build_observation
+    from finplan_arena.scenarios.library import get_scenario
+    st = get_scenario("meridian").build_initial_state()
+    return build_observation(st, SimConfig(), "meridian")
+
+
+def test_hybrid_prompt_carries_proposal_and_suffix():
+    from finplan_arena.agents.llm_agent import (CallableProvider, HybridAgent,
+                                                LLMConfig)
+    seen = {}
+
+    def echo_proposal(system, user):
+        seen["system"] = system
+        marker = "PROPOSED DECISION FROM THE RULES-BASED PLANNER"
+        assert marker in user
+        return user[user.index(marker):].split("\n", 1)[1]
+
+    agent = HybridAgent(LLMConfig(provider="callable", cache_dir=None),
+                        provider=CallableProvider(echo_proposal))
+    d = agent.decide(_hybrid_obs())
+    # echoing the proposal through the real parse path reproduces the expert
+    from finplan_arena.agents.baselines import RuleBasedExpertAgent
+    expert = RuleBasedExpertAgent().decide(_hybrid_obs())
+    assert d.to_json_dict() == expert.to_json_dict()
+    assert "rules-based planner" in seen["system"]
+    assert agent.llm_failures == 0
+
+
+def test_hybrid_falls_back_to_proposal_on_garbage():
+    from finplan_arena.agents.llm_agent import (CallableProvider, HybridAgent,
+                                                LLMConfig)
+    agent = HybridAgent(LLMConfig(provider="callable", cache_dir=None),
+                        provider=CallableProvider(lambda s, u: "not json at all"))
+    d = agent.decide(_hybrid_obs())
+    from finplan_arena.agents.baselines import RuleBasedExpertAgent
+    expert = RuleBasedExpertAgent().decide(_hybrid_obs())
+    assert d.contributions == expert.contributions
+    assert d.annual_spending_discretionary == expert.annual_spending_discretionary
+    assert "fallback" in d.rationale
+    assert agent.llm_failures == 1
